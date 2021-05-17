@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;600;700&family=Space+Mono&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <style>
+        .plots {
+            margin: 10px auto;
+            max-width: 900px;
+            width: 100%;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .plot_header {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: 600;
+            color: #58b938;
+            font-size: 16px;
+        }
+
+        .title {
+            color: #071029;
+            font-size: 12px;
+        }
+
+        .plot {
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+            margin-bottom: 24px;
+        }
+
+        .plot_logs {
+            border-radius: 8px;
+            background-color: #efefef;
+            padding: 16px;
+            margin-top: 24px;
+        }
+
+        .log {
+            display: flex;
+            flex-direction: row;
+            font-family: 'Space Mono', monospace;
+            margin-top: 4px;
+        }
+
+        .log_time {
+            margin-right: 16px;
+            color: #071029;
+            font-size: 12px;
+        }
+
+        .log_text {
+            font-size: 14px;
+        }
+
+        .template {
+            display: none;
+        }
+    </style>
+
+    <div class="template" id="plotTemplate">
+        <div class="plot">
+            <div class="plot_header">
+                <div class="plot_time"><span class="title">Start time:</span> %time%</div>
+                <div class="plot_id"><span class="title">Id:</span> %id% </div>
+                <div class="plot_size"><span class="title">Size:</span> %size%</div>
+            </div>
+            <div class="plot_logs">
+                %logs%
+            </div>
+        </div>
+    </div>
+
+    <div class="template" id="logTemplate">
+        <div class="plot_log log">
+            <div class="log_time">%time%</div>
+            <div class="log_text">%text%</div>
+        </div>
+    </div>
+
+    <div class="plots" id="plots">
+
+    </div>
+
+    <script>
+        const PLOT_TEMPLATE = plotTemplate.innerHTML;
+        const LOG_TEMPLATE = logTemplate.innerHTML;
+
+        function update() {
+            fetch('http://localhost:3000/')
+                .then((response) => response.json())
+                .then((data) => {
+                    console.log(data);
+                    plots.innerHTML = '';
+                    let plotHTML = '';
+                    data.forEach((plot) => {
+                        let logsHTML = '';
+                        plot.logs.forEach((log) => {
+                            logsHTML += LOG_TEMPLATE
+                                .replace('%time%', log[1])
+                                .replace('%text%', log[2])
+                        });
+
+                        plotHTML += PLOT_TEMPLATE
+                            .replace('%time%', new Date(plot.startTimestamp).toLocaleTimeString())
+                            .replace('%id%', plot.id)
+                            .replace('%size%', plot.plot2TmpSize)
+                            .replace('%logs%', logsHTML);
+
+                    });
+
+                    plots.insertAdjacentHTML('beforeEnd', plotHTML);
+                });
+        }
+
+        update();
+        setInterval(() => update(), 30000);
+    </script>
+</body>
+
+</html>
